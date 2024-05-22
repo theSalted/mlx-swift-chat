@@ -17,7 +17,8 @@ public class LLMRunner: ObservableObject {
     
     @Published public var framework: Framework = .mlx
     @Published public var configuration: GenerationConfig? = GenerationConfig(maxNewTokens: 100)
-    @Published public var prompt: String = "Why did the chicken cross the road? "
+    @Published public var prompt: String = "Why did the chicken cross the road?"
+    @Published public var completionText: AttributedString?
     @Published public var model: ModelStore.Model.ID? = nil {
         didSet {
             if model != oldValue {
@@ -28,7 +29,6 @@ public class LLMRunner: ObservableObject {
     
     @Published public private(set) var status: LLMRunnerStatus = .noModelSelected
     @Published public private(set) var llm: RunnableLLM? = nil
-    @Published public private(set) var completionText: AttributedString?
     
     @MainActor(unsafe)
     public init() {
@@ -113,7 +113,6 @@ public class LLMRunner: ObservableObject {
                     prompt: prompt
                 ) { inProgressGeneration in
                     tokensReceived += 1
-                    
                     self.showOutput(
                         currentGeneration: inProgressGeneration,
                         progress: Double(tokensReceived ) / Double(configuration.maxNewTokens)
@@ -144,7 +143,9 @@ public class LLMRunner: ObservableObject {
         progress: Double,
         completedTokensPerSecond: Double? = nil
     ) {
+        print("test")
         Task { @MainActor in
+            print("Test2")
             var response = currentGeneration.deletingPrefix("<s> ")
             
             guard response.count > prompt.count else {
@@ -161,7 +162,6 @@ public class LLMRunner: ObservableObject {
             styledOutput.backgroundColor = Color.yellow.opacity(0.2)
             
             completionText = styledPrompt + styledOutput
-            
             if let tps = completedTokensPerSecond {
                 status = .ready(tps)
             } else {

@@ -8,6 +8,7 @@ import MLXRandom
 import Tokenizers
 
 class RunnableMLXModel: RunnableLLM {
+    typealias GenerationStream = (_ inProgressGeneration: String, _ progress: Double) -> Void
     public enum ModelState {
         case uninitialized
         case loading
@@ -63,11 +64,14 @@ class RunnableMLXModel: RunnableLLM {
     
     func generate(
         config: GenerationConfig,
-        prompt: String
+        prompt: String,
+        callback: GenerationStream? = nil
     ) async throws -> String {
         #if DEBUG
         try await MainActor.run {
-            try _generate(config: config, prompt: prompt)
+            try _generate(config: config, prompt: prompt) { generation, progress in
+                callback?(generation, progress)
+            }
         }
         #else
         try _generate(config: config, prompt: prompt)
@@ -77,7 +81,8 @@ class RunnableMLXModel: RunnableLLM {
     @_optimize(speed)
     private func _generate(
         config: GenerationConfig,
-        prompt: String
+        prompt: String,
+        streamCallback: GenerationStream? = nil
     ) throws -> String {
         guard let model = model, let tokenizer = tokenizer else {
             self.modelState = .failed("Model is not loaded")
@@ -105,7 +110,8 @@ class RunnableMLXModel: RunnableLLM {
             tokens.append(tokenId)
             
             progress = Double(tokens.count) / Double(config.maxNewTokens)
-            
+            let inProgressGeneration = tokenizer.decode(tokens: tokens)
+            streamCallback?(inProgressGeneration, progress)
             self.modelState = .generating(progress)
         }
         
@@ -119,7 +125,9 @@ class RunnableMLXModel: RunnableLLM {
         prompt: String,
         callback: ((String) -> Void)?
     ) async throws -> String {
-        try await generate(config: configuration, prompt: prompt)
+        try await generate(config: configuration, prompt: prompt) { inProgressGeneration, _ in
+            callback?(inProgressGeneration)
+        }
     }
 }
 

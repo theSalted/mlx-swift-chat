@@ -10,13 +10,14 @@ struct ContentView: View {
     
     @State private var isInspectorPresented: Bool = UserInterfaceIdiom.current == .mac
     
+    
     var body: some View {
         NavigationStack {
             VStack {
                 PromptAndCompletionView(
                     prompt:  $runner.prompt,
-                    completionText: runner.completionText
-                )
+                    completionText: $runner.completionText
+                ) //Cannot convert value of type 'AttributedString?' to expected argument type 'Binding<AttributedString?>'
             }
             .padding()
         }
@@ -99,7 +100,7 @@ extension ContentView {
 struct PromptAndCompletionView: View {
     @Binding var prompt: String
     
-    var completionText: AttributedString?
+    @Binding var completionText: AttributedString?
     
     var body: some View {
         VStack {
