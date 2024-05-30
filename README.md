@@ -1,5 +1,7 @@
 # mlx-swift-chat
 
+**This is a fork of: https://github.com/PreternaturalAI/mlx-swift-chat, I am only experimenting with it**
+
 https://github.com/PreternaturalAI/mlx-swift-chat/assets/8635253/f20862f3-8cab-4803-ba6e-44108b075c9b
 
 
