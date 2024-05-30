@@ -5,6 +5,7 @@
 import Generation
 import Models
 import SwiftUI
+import OSLog
 
 @MainActor
 public class LLMRunner: ObservableObject {
@@ -53,7 +54,7 @@ public class LLMRunner: ObservableObject {
                     self.status = .noModelSelected
                 }
                 
-                print(error)
+                logger.error("\(error, privacy: .auto)")
             }
         }
     }
@@ -128,9 +129,9 @@ public class LLMRunner: ObservableObject {
                     completedTokensPerSecond: tokensPerSecond
                 )
                 
-                print("Took \(completionTime)")
+                logger.info("Took \(completionTime)")
             } catch {
-                print("Error \(error)")
+                logger.error("Error \(error)")
                 Task { @MainActor in
                     status = .failed("\(error)")
                 }
@@ -143,9 +144,8 @@ public class LLMRunner: ObservableObject {
         progress: Double,
         completedTokensPerSecond: Double? = nil
     ) {
-        print("test")
+        logger.info("Current generation: \(currentGeneration, privacy: .private)")
         Task { @MainActor in
-            print("Test2")
             var response = currentGeneration.deletingPrefix("<s> ")
             
             guard response.count > prompt.count else {
@@ -198,3 +198,5 @@ public enum LLMRunnerStatus: Hashable {
         }
     }
 }
+
+let logger = Logger(subsystem: "MLXLLM", category: "LLMRunner")
